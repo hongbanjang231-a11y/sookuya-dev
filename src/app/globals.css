@@ -1,0 +1,241 @@
+@import 'tailwindcss';
+
+/* ──────────────────────────────────────────────────────────────────
+ * WDS (Wanted Montage Design System) tokens
+ * 출처: C:\Users\user\.claude\skills\wds-design-system\references\tokens-as-css.md
+ * 라이트 기본 + .dark 클래스 오버라이드
+ * ────────────────────────────────────────────────────────────────── */
+
+:root {
+  /* Atomic — common */
+  --atomic-common-0: #000000;
+  --atomic-common-100: #ffffff;
+
+  /* Atomic — coolNeutral (primary surface/text palette) */
+  --atomic-coolNeutral-5: #0f0f10;
+  --atomic-coolNeutral-7: #141415;
+  --atomic-coolNeutral-10: #171719;
+  --atomic-coolNeutral-15: #1b1c1e;
+  --atomic-coolNeutral-17: #212225;
+  --atomic-coolNeutral-22: #2e2f33;
+  --atomic-coolNeutral-25: #37383c;
+  --atomic-coolNeutral-50: #70737c;
+  --atomic-coolNeutral-90: #c2c4c8;
+  --atomic-coolNeutral-95: #dbdcdf;
+  --atomic-coolNeutral-96: #e1e2e4;
+  --atomic-coolNeutral-97: #eaebec;
+  --atomic-coolNeutral-98: #f4f4f5;
+  --atomic-coolNeutral-99: #f7f7f8;
+
+  /* Atomic — blue (brand) */
+  --atomic-blue-40: #0054d1;
+  --atomic-blue-45: #005eeb;
+  --atomic-blue-50: #0066ff;
+  --atomic-blue-55: #1a75ff;
+  --atomic-blue-60: #3385ff;
+  --atomic-blue-65: #4f95ff;
+
+  /* Atomic — status */
+  --atomic-red-50: #ff4242;
+  --atomic-red-60: #ff6363;
+  --atomic-green-50: #00bf40;
+  --atomic-green-60: #1ed45a;
+  --atomic-orange-50: #ff9200;
+  --atomic-orange-60: #ffa938;
+
+  /* Semantic — light */
+  --semantic-static-white: #ffffff;
+  --semantic-static-black: #000000;
+
+  --semantic-primary-normal: #0066ff;
+  --semantic-primary-strong: #005eeb;
+  --semantic-primary-heavy: #0054d1;
+
+  --semantic-label-normal: #171719;
+  --semantic-label-strong: #000000;
+  --semantic-label-neutral: rgba(46, 47, 51, 0.88);
+  --semantic-label-alternative: rgba(55, 56, 60, 0.61);
+  --semantic-label-assistive: rgba(55, 56, 60, 0.28);
+  --semantic-label-disable: rgba(55, 56, 60, 0.16);
+
+  --semantic-background-normal-normal: #ffffff;
+  --semantic-background-normal-alternative: #f7f7f8;
+  --semantic-background-elevated-normal: #ffffff;
+  --semantic-background-elevated-alternative: #f7f7f8;
+
+  --semantic-interaction-inactive: #989ba2;
+  --semantic-interaction-disable: #f4f4f5;
+
+  --semantic-line-normal-normal: rgba(112, 115, 124, 0.22);
+  --semantic-line-normal-neutral: rgba(112, 115, 124, 0.16);
+  --semantic-line-normal-alternative: rgba(112, 115, 124, 0.08);
+  --semantic-line-solid-normal: #e1e2e4;
+  --semantic-line-solid-neutral: #eaebec;
+  --semantic-line-solid-alternative: #f4f4f5;
+
+  --semantic-status-positive: #00bf40;
+  --semantic-status-cautionary: #ff9200;
+  --semantic-status-negative: #ff4242;
+
+  --semantic-fill-normal: rgba(112, 115, 124, 0.08);
+  --semantic-fill-strong: rgba(112, 115, 124, 0.16);
+  --semantic-fill-alternative: rgba(112, 115, 124, 0.05);
+
+  --semantic-inverse-primary: #3385ff;
+  --semantic-inverse-background: #1b1c1e;
+  --semantic-inverse-label: #f7f7f8;
+
+  --semantic-material-dimmer: rgba(23, 23, 25, 0.52);
+
+  /* Shadows (라이트/다크 공통) */
+  --shadow-xsmall: 0px 1px 2px -1px rgba(23, 23, 23, 0.1);
+  --shadow-small:
+    0px 2px 4px -2px rgba(23, 23, 23, 0.06),
+    0px 4px 6px -1px rgba(23, 23, 23, 0.06);
+  --shadow-medium:
+    0px 4px 6px -2px rgba(23, 23, 23, 0.07),
+    0px 10px 15px -3px rgba(23, 23, 23, 0.07);
+  --shadow-large:
+    0px 6px 10px -4px rgba(23, 23, 23, 0.08),
+    0px 16px 24px -6px rgba(23, 23, 23, 0.08);
+  --shadow-xlarge:
+    0px 10px 15px -5px rgba(23, 23, 23, 0.1),
+    0px 24px 38px -10px rgba(23, 23, 23, 0.12);
+}
+
+/* Semantic — dark */
+.dark {
+  --semantic-primary-normal: #3385ff;
+  --semantic-primary-strong: #1a75ff;
+  --semantic-primary-heavy: #0066ff;
+
+  --semantic-label-normal: #f7f7f8;
+  --semantic-label-strong: #ffffff;
+  --semantic-label-neutral: rgba(194, 196, 200, 0.88);
+  --semantic-label-alternative: rgba(174, 176, 182, 0.61);
+  --semantic-label-assistive: rgba(174, 176, 182, 0.28);
+  --semantic-label-disable: rgba(152, 155, 162, 0.16);
+
+  --semantic-background-normal-normal: #1b1c1e;
+  --semantic-background-normal-alternative: #0f0f10;
+  --semantic-background-elevated-normal: #212225;
+  --semantic-background-elevated-alternative: #141415;
+
+  --semantic-interaction-inactive: #5a5c63;
+  --semantic-interaction-disable: #2e2f33;
+
+  --semantic-line-normal-normal: rgba(112, 115, 124, 0.32);
+  --semantic-line-normal-neutral: rgba(112, 115, 124, 0.28);
+  --semantic-line-normal-alternative: rgba(112, 115, 124, 0.22);
+  --semantic-line-solid-normal: #37383c;
+  --semantic-line-solid-neutral: #333438;
+  --semantic-line-solid-alternative: #2e2f33;
+
+  --semantic-status-positive: #1ed45a;
+  --semantic-status-cautionary: #ffa938;
+  --semantic-status-negative: #ff6363;
+
+  --semantic-fill-normal: rgba(112, 115, 124, 0.22);
+  --semantic-fill-strong: rgba(112, 115, 124, 0.28);
+  --semantic-fill-alternative: rgba(112, 115, 124, 0.12);
+
+  --semantic-inverse-primary: #0066ff;
+  --semantic-inverse-background: #ffffff;
+  --semantic-inverse-label: #171719;
+
+  --semantic-material-dimmer: rgba(23, 23, 25, 0.74);
+}
+
+/* ──────────────────────────────────────────────────────────────────
+ * Tailwind theme — Tailwind 유틸리티로 토큰을 노출
+ * 사용 예: bg-primary, text-label-normal, border-line, p-4 (=16px), gap-2 (=8px)
+ * ────────────────────────────────────────────────────────────────── */
+
+@theme {
+  /* colors */
+  --color-primary: var(--semantic-primary-normal);
+  --color-primary-strong: var(--semantic-primary-strong);
+  --color-primary-heavy: var(--semantic-primary-heavy);
+
+  --color-label-normal: var(--semantic-label-normal);
+  --color-label-strong: var(--semantic-label-strong);
+  --color-label-neutral: var(--semantic-label-neutral);
+  --color-label-alternative: var(--semantic-label-alternative);
+  --color-label-assistive: var(--semantic-label-assistive);
+  --color-label-disable: var(--semantic-label-disable);
+
+  --color-bg: var(--semantic-background-normal-normal);
+  --color-bg-alt: var(--semantic-background-normal-alternative);
+  --color-bg-elevated: var(--semantic-background-elevated-normal);
+  --color-bg-elevated-alt: var(--semantic-background-elevated-alternative);
+
+  --color-line: var(--semantic-line-normal-normal);
+  --color-line-subtle: var(--semantic-line-normal-alternative);
+  --color-line-solid: var(--semantic-line-solid-normal);
+
+  --color-fill: var(--semantic-fill-normal);
+  --color-fill-strong: var(--semantic-fill-strong);
+  --color-fill-alt: var(--semantic-fill-alternative);
+
+  --color-success: var(--semantic-status-positive);
+  --color-warning: var(--semantic-status-cautionary);
+  --color-danger: var(--semantic-status-negative);
+
+  --color-inverse-bg: var(--semantic-inverse-background);
+  --color-inverse-label: var(--semantic-inverse-label);
+  --color-dimmer: var(--semantic-material-dimmer);
+
+  /* spacing (WDS 스케일) — Tailwind 기본 1=4px와 호환 */
+  --spacing-0_5: 2px;
+  --spacing-1: 4px;
+  --spacing-1_5: 6px;
+  --spacing-2: 8px;
+  --spacing-2_5: 10px;
+  --spacing-3: 12px;
+  --spacing-3_5: 14px;
+  --spacing-4: 16px;
+  --spacing-5: 20px;
+  --spacing-6: 24px;
+  --spacing-8: 32px;
+  --spacing-10: 40px;
+  --spacing-12: 48px;
+  --spacing-14: 56px;
+  --spacing-16: 64px;
+  --spacing-18: 72px;
+  --spacing-20: 80px;
+
+  /* breakpoints */
+  --breakpoint-sm: 768px;
+  --breakpoint-md: 992px;
+  --breakpoint-lg: 1200px;
+  --breakpoint-xl: 1600px;
+
+  /* shadows */
+  --shadow-xs: var(--shadow-xsmall);
+  --shadow-sm: var(--shadow-small);
+  --shadow-md: var(--shadow-medium);
+  --shadow-lg: var(--shadow-large);
+  --shadow-xl: var(--shadow-xlarge);
+
+  /* font */
+  --font-sans:
+    'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont,
+    system-ui, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+/* ──────────────────────────────────────────────────────────────────
+ * Base
+ * ────────────────────────────────────────────────────────────────── */
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  font-family: var(--font-sans);
+  color: var(--semantic-label-normal);
+  background: var(--semantic-background-normal-normal);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
