@@ -1,102 +1,173 @@
 import Link from 'next/link';
 
 import { LoginButtons } from '@/components/auth/login-buttons';
-import { UserCard } from '@/components/auth/user-card';
-import { ThemeToggle } from '@/components/theme-toggle';
+import { OpinionDisplay } from '@/components/opinion/opinion-display';
+import { OpinionForm } from '@/components/opinion/opinion-form';
+import { HeaderUser } from '@/components/site/header-user';
+import {
+  ActiveTopicCard,
+  type ActiveTopic,
+} from '@/components/topic/active-topic-card';
+import { getCyclePhase } from '@/lib/cycle';
 import { createClient } from '@/lib/supabase/server';
+
+export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
   const supabase = await createClient();
+
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  let isAdmin = false;
+  // 프로필 (닉네임 + admin 여부)
+  let headerUserData = null as null | { nickname: string; isAdmin: boolean };
   if (user) {
     const { data: profile } = await supabase
       .from('profiles')
-      .select('is_admin')
+      .select('nickname, is_admin')
       .eq('id', user.id)
       .single();
-    isAdmin = profile?.is_admin ?? false;
+    if (profile) {
+      headerUserData = {
+        nickname: profile.nickname,
+        isAdmin: profile.is_admin,
+      };
+    }
+  }
+
+  // active 토픽 (UNIQUE 인덱스로 0~1개)
+  const { data: topic } = await supabase
+    .from('topics')
+    .select(
+      'id, title, description, category, cycle_starts_at, cycle_ends_at, opinion_window_starts_at, opinion_window_ends_at, vote_window_starts_at, vote_window_ends_at, comment_window_ends_at',
+    )
+    .eq('status', 'active')
+    .maybeSingle();
+
+  // 현재 사용자의 의견 (있으면)
+  let myOpinion = null;
+  if (user && topic) {
+    const { data } = await supabase
+      .from('opinions')
+      .select(
+        'id, body, agree_count, disagree_count, unsure_count, comment_count, created_at, updated_at, status',
+      )
+      .eq('topic_id', topic.id)
+      .eq('author_id', user.id)
+      .maybeSingle();
+    if (data && data.status !== 'deleted') {
+      myOpinion = data;
+    }
   }
 
   return (
     <main className="bg-bg-alt min-h-screen">
       <header className="border-line-subtle border-b">
         <div className="mx-auto flex max-w-[1200px] items-center justify-between px-5 py-4">
-          <h1 className="text-[20px] font-bold tracking-tight">숙의야</h1>
-          <div className="flex items-center gap-3">
-            {isAdmin && (
-              <Link
-                href="/admin/topics"
-                className="bg-fill text-label-neutral hover:text-label-strong rounded-full px-3 py-1.5 text-[12px] font-medium transition-colors"
-              >
-                관리자 페이지
-              </Link>
-            )}
-            <ThemeToggle />
-          </div>
+          <Link
+            href="/"
+            className="text-label-strong text-[20px] font-bold tracking-tight"
+          >
+            숙의야
+          </Link>
+          <HeaderUser user={headerUserData} />
         </div>
       </header>
 
-      <section className="mx-auto max-w-[640px] px-5 py-16">
-        <div className="border-line bg-bg-elevated rounded-[16px] border p-8 shadow-md">
-          <div className="bg-fill text-label-neutral mb-6 inline-flex items-center gap-2 rounded-full px-3 py-1 text-[12px]">
-            <span className="bg-success h-1.5 w-1.5 rounded-full" />
-            Phase 0 — 셋업 완료
+      <section className="mx-auto max-w-[720px] px-5 py-12">
+        {topic ? (
+          <div className="flex flex-col gap-6">
+            <ActiveTopicCard topic={topic as ActiveTopic} />
+            <OpinionSection
+              topic={topic as ActiveTopic}
+              user={user}
+              myOpinion={myOpinion}
+            />
           </div>
-
-          <h2 className="text-label-strong text-[28px] leading-tight font-bold tracking-tight">
-            주 1 주제, 7일 사이클.
-            <br />
-            깊이 있는 토론.
-          </h2>
-          <p className="text-label-neutral mt-3 text-[15px] leading-relaxed">
-            매주 월요일 한 주제가 열립니다. 의견을 쓰고, 다른 의견에 동의·반대로
-            투표하고, 일요일 저녁에 결론 리포트를 받아보세요.
-          </p>
-
-          <div className="mt-8 flex flex-col items-center">
-            {user ? <UserCard user={user} /> : <LoginButtons />}
-          </div>
-        </div>
-
-        {/* WDS 토큰 검증 패널 */}
-        <div className="border-line mt-10 rounded-[12px] border border-dashed p-5">
-          <p className="text-label-alternative mb-4 text-[12px] font-medium">
-            WDS 토큰 검증 (Phase 0 종료 후 제거)
-          </p>
-          <div className="flex flex-wrap items-center gap-3">
-            <button className="bg-primary rounded-[12px] px-7 py-3 text-[16px] font-bold text-white">
-              Large
-            </button>
-            <button className="bg-primary rounded-[10px] px-5 py-2.5 text-[15px] font-bold text-white">
-              Medium
-            </button>
-            <button className="bg-primary rounded-[8px] px-3.5 py-1.5 text-[13px] font-bold text-white">
-              Small
-            </button>
-            <button className="border-line-solid text-label-normal rounded-[10px] border px-5 py-2.5 text-[15px] font-medium">
-              Outlined
-            </button>
-          </div>
-          <div className="mt-4 flex flex-wrap gap-2">
-            <span className="bg-success/15 text-success rounded-full px-3 py-1 text-[12px] font-medium">
-              positive
-            </span>
-            <span className="bg-warning/15 text-warning rounded-full px-3 py-1 text-[12px] font-medium">
-              cautionary
-            </span>
-            <span className="bg-danger/15 text-danger rounded-full px-3 py-1 text-[12px] font-medium">
-              negative
-            </span>
-          </div>
-          <p className="text-label-alternative mt-4 text-[13px]">
-            테마 토글이 동작하면 위 색이 모두 다크모드로 전환됩니다.
-          </p>
-        </div>
+        ) : (
+          <EmptyState />
+        )}
       </section>
     </main>
+  );
+}
+
+function EmptyState() {
+  return (
+    <div className="border-line bg-bg-elevated rounded-[16px] border p-10 text-center shadow-sm">
+      <p className="text-label-strong text-[18px] font-bold">
+        이번 주 주제 준비 중
+      </p>
+      <p className="text-label-neutral mt-2 text-[14px] leading-relaxed">
+        매주 월요일 0시에 새로운 주제가 열립니다.
+        <br />곧 만나요.
+      </p>
+    </div>
+  );
+}
+
+function OpinionSection({
+  topic,
+  user,
+  myOpinion,
+}: {
+  topic: ActiveTopic;
+  user: { id: string } | null;
+  myOpinion: {
+    id: string;
+    body: string;
+    agree_count: number;
+    disagree_count: number;
+    unsure_count: number;
+    comment_count: number;
+    created_at: string;
+    updated_at: string;
+  } | null;
+}) {
+  const phase = getCyclePhase(topic);
+  const inOpinionWindow = phase.phase === 'opinion';
+
+  // 1. 비로그인
+  if (!user) {
+    return (
+      <div className="border-line bg-bg-elevated flex flex-col items-center gap-4 rounded-[16px] border p-8 shadow-sm">
+        <p className="text-label-strong text-[16px] font-bold">
+          토론에 참여하려면 로그인하세요
+        </p>
+        <LoginButtons />
+      </div>
+    );
+  }
+
+  // 2. 의견 있음
+  if (myOpinion) {
+    return (
+      <div className="border-line bg-bg-elevated rounded-[16px] border p-6 shadow-sm">
+        <OpinionDisplay
+          opinion={myOpinion}
+          topicId={topic.id}
+          canEdit={inOpinionWindow}
+        />
+      </div>
+    );
+  }
+
+  // 3. 의견 없음 + 작성창 진행 중
+  if (inOpinionWindow) {
+    return (
+      <div className="border-line bg-bg-elevated rounded-[16px] border p-6 shadow-sm">
+        <OpinionForm topicId={topic.id} />
+      </div>
+    );
+  }
+
+  // 4. 의견 없음 + 작성창 아님
+  return (
+    <div className="border-line bg-bg-elevated rounded-[16px] border p-6 text-center shadow-sm">
+      <p className="text-label-neutral text-[14px]">
+        의견 작성 기간이 아닙니다. ({phase.label})
+      </p>
+    </div>
   );
 }

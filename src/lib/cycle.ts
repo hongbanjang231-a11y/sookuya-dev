@@ -92,6 +92,105 @@ export function computeCycle(mondayYmd: string): CycleTimestamps {
 }
 
 /**
+ * 사이클 단계 판정 (PRD F1, F3, F4, F5 + F11 진행 상태)
+ */
+export type CyclePhase =
+  | 'pre_opinion' // 월요일 — 의견창 시작 전
+  | 'opinion' // 화·수 — 의견 작성중
+  | 'between_opinion_vote' // 의견창 마감 ~ 투표창 시작 전
+  | 'vote' // 목·금·토 — 투표중
+  | 'between_vote_end' // 투표창 마감 ~ 결론(일 22시) 전
+  | 'ended'; // 일 22시 이후
+
+export interface PhaseInfo {
+  phase: CyclePhase;
+  label: string; // 사용자 표시용 단계명
+  nextLabel?: string; // "의견 마감까지", "투표 시작까지" 등
+  nextDeadline?: string; // ISO 8601 timestamp (KST offset)
+}
+
+export interface TopicCycleWindows {
+  opinion_window_starts_at: string;
+  opinion_window_ends_at: string;
+  vote_window_starts_at: string;
+  vote_window_ends_at: string;
+  comment_window_ends_at: string;
+}
+
+export function getCyclePhase(
+  topic: TopicCycleWindows,
+  now: Date = new Date(),
+): PhaseInfo {
+  const t = now.getTime();
+  const opStart = new Date(topic.opinion_window_starts_at).getTime();
+  const opEnd = new Date(topic.opinion_window_ends_at).getTime();
+  const voStart = new Date(topic.vote_window_starts_at).getTime();
+  const voEnd = new Date(topic.vote_window_ends_at).getTime();
+  const cmEnd = new Date(topic.comment_window_ends_at).getTime();
+
+  if (t < opStart) {
+    return {
+      phase: 'pre_opinion',
+      label: '주제 발표',
+      nextLabel: '의견 작성 시작까지',
+      nextDeadline: topic.opinion_window_starts_at,
+    };
+  }
+  if (t <= opEnd) {
+    return {
+      phase: 'opinion',
+      label: '의견 작성 중',
+      nextLabel: '의견 마감까지',
+      nextDeadline: topic.opinion_window_ends_at,
+    };
+  }
+  if (t < voStart) {
+    return {
+      phase: 'between_opinion_vote',
+      label: '의견 작성 마감',
+      nextLabel: '투표 시작까지',
+      nextDeadline: topic.vote_window_starts_at,
+    };
+  }
+  if (t <= voEnd) {
+    return {
+      phase: 'vote',
+      label: '의견 투표 중',
+      nextLabel: '투표 마감까지',
+      nextDeadline: topic.vote_window_ends_at,
+    };
+  }
+  if (t <= cmEnd) {
+    return {
+      phase: 'between_vote_end',
+      label: '결론 임박',
+      nextLabel: '결론 발표까지',
+      nextDeadline: topic.comment_window_ends_at,
+    };
+  }
+  return {
+    phase: 'ended',
+    label: '사이클 종료',
+  };
+}
+
+/**
+ * 남은 시간을 한국어 단위로 표시. "3일 5시간", "2시간 14분", "5분", "마감"
+ */
+export function formatTimeLeft(toIso: string, from: Date = new Date()): string {
+  const ms = new Date(toIso).getTime() - from.getTime();
+  if (ms <= 0) return '마감';
+  const sec = Math.floor(ms / 1000);
+  const days = Math.floor(sec / 86400);
+  const hours = Math.floor((sec % 86400) / 3600);
+  const mins = Math.floor((sec % 3600) / 60);
+  if (days > 0) return `${days}일 ${hours}시간`;
+  if (hours > 0) return `${hours}시간 ${mins}분`;
+  if (mins > 0) return `${mins}분`;
+  return '곧';
+}
+
+/**
  * KST timestamp (ISO with offset) → 한국식 표시 문자열
  * 예: "2026-06-01T00:00:00+09:00" → "2026.06.01 (월) 00:00"
  */
