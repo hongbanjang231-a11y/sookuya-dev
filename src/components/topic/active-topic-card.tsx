@@ -11,11 +11,8 @@ const CATEGORY_LABELS: Record<string, string> = {
 };
 
 const PHASE_STYLES: Record<string, string> = {
-  pre_opinion: 'bg-fill text-label-neutral',
-  opinion: 'bg-primary/15 text-primary',
-  between_opinion_vote: 'bg-fill text-label-neutral',
-  vote: 'bg-warning/15 text-warning',
-  between_vote_end: 'bg-fill text-label-neutral',
+  pre: 'bg-fill text-label-neutral',
+  active: 'bg-primary/15 text-primary',
   ended: 'bg-fill text-label-alternative',
 };
 
@@ -26,11 +23,6 @@ export interface ActiveTopic {
   category: string;
   cycle_starts_at: string;
   cycle_ends_at: string;
-  opinion_window_starts_at: string;
-  opinion_window_ends_at: string;
-  vote_window_starts_at: string;
-  vote_window_ends_at: string;
-  comment_window_ends_at: string;
 }
 
 export function ActiveTopicCard({ topic }: { topic: ActiveTopic }) {
@@ -70,81 +62,56 @@ export function ActiveTopicCard({ topic }: { topic: ActiveTopic }) {
         {topic.description}
       </p>
 
-      <CycleTimeline topic={topic} currentPhase={phaseInfo.phase} />
+      <CycleTimeline topic={topic} phase={phaseInfo.phase} />
     </article>
   );
 }
 
 function CycleTimeline({
   topic,
-  currentPhase,
+  phase,
 }: {
   topic: ActiveTopic;
-  currentPhase: string;
+  phase: string;
 }) {
-  const steps = [
-    {
-      key: 'opinion',
-      label: '의견 작성',
-      from: topic.opinion_window_starts_at,
-      to: topic.opinion_window_ends_at,
-      active: currentPhase === 'opinion',
-      done: ['between_opinion_vote', 'vote', 'between_vote_end', 'ended'].includes(
-        currentPhase,
-      ),
-    },
-    {
-      key: 'vote',
-      label: '의견 투표',
-      from: topic.vote_window_starts_at,
-      to: topic.vote_window_ends_at,
-      active: currentPhase === 'vote',
-      done: ['between_vote_end', 'ended'].includes(currentPhase),
-    },
-    {
-      key: 'conclusion',
-      label: '결론 발표',
-      from: topic.comment_window_ends_at,
-      to: topic.comment_window_ends_at,
-      active: currentPhase === 'between_vote_end',
-      done: currentPhase === 'ended',
-    },
-  ];
-
   return (
-    <ol className="border-line-subtle mt-6 grid gap-2 border-t pt-5 sm:grid-cols-3">
-      {steps.map((s) => (
-        <li
-          key={s.key}
-          className={`rounded-[10px] p-3 ${
-            s.active
+    <ol className="border-line-subtle mt-6 grid gap-2 border-t pt-5 sm:grid-cols-2">
+      <li
+        className={`rounded-[10px] p-3 ${
+          phase === 'active' || phase === 'ended'
+            ? 'bg-fill'
+            : phase === 'pre'
+              ? 'bg-bg-alt'
+              : 'bg-bg-alt'
+        }`}
+      >
+        <p className="text-label-alternative text-[11px] font-medium">
+          사이클 시작
+        </p>
+        <p className="text-label-strong mt-1 text-[12px] tabular-nums">
+          {formatKst(topic.cycle_starts_at)}
+        </p>
+      </li>
+      <li
+        className={`rounded-[10px] p-3 ${
+          phase === 'ended'
+            ? 'bg-fill'
+            : phase === 'active'
               ? 'bg-primary/5 border-primary border'
-              : s.done
-                ? 'bg-fill'
-                : 'bg-bg-alt'
+              : 'bg-bg-alt'
+        }`}
+      >
+        <p
+          className={`text-[11px] font-medium ${
+            phase === 'active' ? 'text-primary' : 'text-label-alternative'
           }`}
         >
-          <p
-            className={`text-[11px] font-medium ${
-              s.active
-                ? 'text-primary'
-                : s.done
-                  ? 'text-label-alternative'
-                  : 'text-label-alternative'
-            }`}
-          >
-            {s.label}
-          </p>
-          <p className="text-label-strong mt-1 text-[12px] tabular-nums">
-            {formatKst(s.from)}
-            {s.from !== s.to && (
-              <>
-                <br />~ {formatKst(s.to)}
-              </>
-            )}
-          </p>
-        </li>
-      ))}
+          결론 발표
+        </p>
+        <p className="text-label-strong mt-1 text-[12px] tabular-nums">
+          {formatKst(topic.cycle_ends_at)}
+        </p>
+      </li>
     </ol>
   );
 }

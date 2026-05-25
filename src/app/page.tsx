@@ -39,9 +39,7 @@ export default async function HomePage() {
   // active 토픽 (UNIQUE 인덱스로 0~1개)
   const { data: topic } = await supabase
     .from('topics')
-    .select(
-      'id, title, description, category, cycle_starts_at, cycle_ends_at, opinion_window_starts_at, opinion_window_ends_at, vote_window_starts_at, vote_window_ends_at, comment_window_ends_at',
-    )
+    .select('id, title, description, category, cycle_starts_at, cycle_ends_at')
     .eq('status', 'active')
     .maybeSingle();
 
@@ -126,7 +124,7 @@ function OpinionSection({
   } | null;
 }) {
   const phase = getCyclePhase(topic);
-  const inOpinionWindow = phase.phase === 'opinion';
+  const inActiveCycle = phase.phase === 'active';
 
   // 1. 비로그인
   if (!user) {
@@ -147,14 +145,14 @@ function OpinionSection({
         <OpinionDisplay
           opinion={myOpinion}
           topicId={topic.id}
-          canEdit={inOpinionWindow}
+          canEdit={inActiveCycle}
         />
       </div>
     );
   }
 
-  // 3. 의견 없음 + 작성창 진행 중
-  if (inOpinionWindow) {
+  // 3. 의견 없음 + 사이클 진행 중
+  if (inActiveCycle) {
     return (
       <div className="border-line bg-bg-elevated rounded-[16px] border p-6 shadow-sm">
         <OpinionForm topicId={topic.id} />
@@ -162,11 +160,13 @@ function OpinionSection({
     );
   }
 
-  // 4. 의견 없음 + 작성창 아님
+  // 4. 의견 없음 + 사이클 외 (시작 전 또는 종료)
   return (
     <div className="border-line bg-bg-elevated rounded-[16px] border p-6 text-center shadow-sm">
       <p className="text-label-neutral text-[14px]">
-        의견 작성 기간이 아닙니다. ({phase.label})
+        {phase.phase === 'pre'
+          ? '주제가 곧 시작됩니다. 사이클 시작 후 의견을 등록할 수 있어요.'
+          : '사이클이 종료되었습니다.'}
       </p>
     </div>
   );

@@ -80,41 +80,44 @@ export function computeCycle(mondayYmd: string): CycleTimestamps {
   }
   const [y, m, d] = mondayYmd.split('-').map(Number);
 
+  // 2026-05-25 정책 단순화 (D10):
+  // 의견 작성·투표·댓글 모두 사이클 전체(월 0시 ~ 일 22시) 동안 자유
+  // 모든 윈도우 = cycle 범위
+  const cycleStarts = kstIsoString(y, m, d, 0, 0); // 월 00:00
+  const cycleEnds = kstIsoString(y, m, d, 6, 22); // 일 22:00
+
   return {
-    cycle_starts_at: kstIsoString(y, m, d, 0, 0), // 월 00:00
-    opinion_window_starts_at: kstIsoString(y, m, d, 1, 0), // 화 00:00
-    opinion_window_ends_at: kstIsoString(y, m, d, 2, 23, 59, 59), // 수 23:59:59
-    vote_window_starts_at: kstIsoString(y, m, d, 3, 0), // 목 00:00
-    vote_window_ends_at: kstIsoString(y, m, d, 5, 23, 59, 59), // 토 23:59:59
-    comment_window_ends_at: kstIsoString(y, m, d, 6, 22), // 일 22:00
-    cycle_ends_at: kstIsoString(y, m, d, 6, 22), // 일 22:00
+    cycle_starts_at: cycleStarts,
+    cycle_ends_at: cycleEnds,
+    opinion_window_starts_at: cycleStarts,
+    opinion_window_ends_at: cycleEnds,
+    vote_window_starts_at: cycleStarts,
+    vote_window_ends_at: cycleEnds,
+    comment_window_ends_at: cycleEnds,
   };
 }
 
 /**
- * 사이클 단계 판정 (PRD F1, F3, F4, F5 + F11 진행 상태)
+ * 사이클 단계 판정 (PRD v1.1 D10 정책 단순화 반영)
+ *
+ * 2026-05-25 변경:
+ *   기존 6단계 (pre_opinion / opinion / between_opinion_vote / vote / between_vote_end / ended)
+ *   → 3단계 (pre / active / ended)
+ *
+ * 의견 작성·투표·댓글 모두 active 기간 동안 자유.
  */
-export type CyclePhase =
-  | 'pre_opinion' // 월요일 — 의견창 시작 전
-  | 'opinion' // 화·수 — 의견 작성중
-  | 'between_opinion_vote' // 의견창 마감 ~ 투표창 시작 전
-  | 'vote' // 목·금·토 — 투표중
-  | 'between_vote_end' // 투표창 마감 ~ 결론(일 22시) 전
-  | 'ended'; // 일 22시 이후
+export type CyclePhase = 'pre' | 'active' | 'ended';
 
 export interface PhaseInfo {
   phase: CyclePhase;
-  label: string; // 사용자 표시용 단계명
-  nextLabel?: string; // "의견 마감까지", "투표 시작까지" 등
+  label: string;
+  nextLabel?: string;
   nextDeadline?: string; // ISO 8601 timestamp (KST offset)
 }
 
 export interface TopicCycleWindows {
-  opinion_window_starts_at: string;
-  opinion_window_ends_at: string;
-  vote_window_starts_at: string;
-  vote_window_ends_at: string;
-  comment_window_ends_at: string;
+  cycle_starts_at: string;
+  cycle_ends_at: string;
 }
 
 export function getCyclePhase(
@@ -122,50 +125,23 @@ export function getCyclePhase(
   now: Date = new Date(),
 ): PhaseInfo {
   const t = now.getTime();
-  const opStart = new Date(topic.opinion_window_starts_at).getTime();
-  const opEnd = new Date(topic.opinion_window_ends_at).getTime();
-  const voStart = new Date(topic.vote_window_starts_at).getTime();
-  const voEnd = new Date(topic.vote_window_ends_at).getTime();
-  const cmEnd = new Date(topic.comment_window_ends_at).getTime();
+  const start = new Date(topic.cycle_starts_at).getTime();
+  const end = new Date(topic.cycle_ends_at).getTime();
 
-  if (t < opStart) {
+  if (t < start) {
     return {
-      phase: 'pre_opinion',
+      phase: 'pre',
       label: '주제 발표',
-      nextLabel: '의견 작성 시작까지',
-      nextDeadline: topic.opinion_window_starts_at,
+      nextLabel: '사이클 시작까지',
+      nextDeadline: topic.cycle_starts_at,
     };
   }
-  if (t <= opEnd) {
+  if (t <= end) {
     return {
-      phase: 'opinion',
-      label: '의견 작성 중',
-      nextLabel: '의견 마감까지',
-      nextDeadline: topic.opinion_window_ends_at,
-    };
-  }
-  if (t < voStart) {
-    return {
-      phase: 'between_opinion_vote',
-      label: '의견 작성 마감',
-      nextLabel: '투표 시작까지',
-      nextDeadline: topic.vote_window_starts_at,
-    };
-  }
-  if (t <= voEnd) {
-    return {
-      phase: 'vote',
-      label: '의견 투표 중',
-      nextLabel: '투표 마감까지',
-      nextDeadline: topic.vote_window_ends_at,
-    };
-  }
-  if (t <= cmEnd) {
-    return {
-      phase: 'between_vote_end',
-      label: '결론 임박',
+      phase: 'active',
+      label: '진행 중',
       nextLabel: '결론 발표까지',
-      nextDeadline: topic.comment_window_ends_at,
+      nextDeadline: topic.cycle_ends_at,
     };
   }
   return {

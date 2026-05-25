@@ -133,12 +133,19 @@ export function TopicForm() {
       {preview && (
         <div className="bg-bg-alt border-line-subtle space-y-1.5 rounded-[10px] border p-4">
           <p className="text-label-alternative mb-2 text-[12px] font-medium">
-            자동 계산된 사이클 윈도우 (KST)
+            자동 계산된 사이클 (KST)
           </p>
-          <CycleRow label="의견 작성" range={[preview.opinion_window_starts_at, preview.opinion_window_ends_at]} />
-          <CycleRow label="의견 투표" range={[preview.vote_window_starts_at, preview.vote_window_ends_at]} />
-          <CycleRow label="댓글 마감" single={preview.comment_window_ends_at} />
-          <CycleRow label="사이클 종료" single={preview.cycle_ends_at} />
+          <CycleRow
+            label="사이클 시작"
+            single={preview.cycle_starts_at}
+          />
+          <CycleRow
+            label="결론 발표"
+            single={preview.cycle_ends_at}
+          />
+          <p className="text-label-alternative mt-2 text-[11px] leading-relaxed">
+            의견 작성·투표·댓글 모두 사이클 전체 동안 자유 (정책 D10)
+          </p>
         </div>
       )}
 
