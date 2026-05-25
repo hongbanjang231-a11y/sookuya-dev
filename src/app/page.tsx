@@ -1,3 +1,5 @@
+import Link from 'next/link';
+
 import { LoginButtons } from '@/components/auth/login-buttons';
 import { UserCard } from '@/components/auth/user-card';
 import { ThemeToggle } from '@/components/theme-toggle';
@@ -9,12 +11,32 @@ export default async function HomePage() {
     data: { user },
   } = await supabase.auth.getUser();
 
+  let isAdmin = false;
+  if (user) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('is_admin')
+      .eq('id', user.id)
+      .single();
+    isAdmin = profile?.is_admin ?? false;
+  }
+
   return (
     <main className="bg-bg-alt min-h-screen">
       <header className="border-line-subtle border-b">
         <div className="mx-auto flex max-w-[1200px] items-center justify-between px-5 py-4">
           <h1 className="text-[20px] font-bold tracking-tight">숙의야</h1>
-          <ThemeToggle />
+          <div className="flex items-center gap-3">
+            {isAdmin && (
+              <Link
+                href="/admin/topics"
+                className="bg-fill text-label-neutral hover:text-label-strong rounded-full px-3 py-1.5 text-[12px] font-medium transition-colors"
+              >
+                관리자 페이지
+              </Link>
+            )}
+            <ThemeToggle />
+          </div>
         </div>
       </header>
 
