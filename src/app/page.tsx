@@ -1,8 +1,13 @@
 import Link from 'next/link';
 
+import type { VoteValue } from '@/app/actions/votes';
 import { LoginButtons } from '@/components/auth/login-buttons';
 import { OpinionDisplay } from '@/components/opinion/opinion-display';
 import { OpinionForm } from '@/components/opinion/opinion-form';
+import {
+  OpinionsList,
+  type OpinionListItem,
+} from '@/components/opinion/opinions-list';
 import { HeaderUser } from '@/components/site/header-user';
 import {
   ActiveTopicCard,
@@ -59,6 +64,66 @@ export default async function HomePage() {
     }
   }
 
+  // 다른 사람들의 의견 (published만, 자기 의견 제외, 최신순)
+  let othersOpinions: OpinionListItem[] = [];
+  let myVotes: Record<string, VoteValue> = {};
+  if (topic) {
+    let query = supabase
+      .from('opinions')
+      .select(
+        'id, body, agree_count, disagree_count, unsure_count, comment_count, created_at, updated_at, author:profiles!opinions_author_id_fkey(nickname)',
+      )
+      .eq('topic_id', topic.id)
+      .eq('status', 'published')
+      .order('created_at', { ascending: false });
+    if (user) query = query.neq('author_id', user.id);
+
+    const { data: rows } = await query;
+    if (rows) {
+      othersOpinions = rows.map((r) => {
+        const author = r.author as unknown as { nickname: string } | null;
+        return {
+          id: r.id,
+          body: r.body,
+          agree_count: r.agree_count,
+          disagree_count: r.disagree_count,
+          unsure_count: r.unsure_count,
+          comment_count: r.comment_count,
+          created_at: r.created_at,
+          updated_at: r.updated_at,
+          author_nickname: author?.nickname ?? '익명',
+        };
+      });
+    }
+
+    // 내 vote 매핑
+    if (user && othersOpinions.length > 0) {
+      const ids = othersOpinions.map((o) => o.id);
+      const { data: voteRows } = await supabase
+        .from('opinion_votes')
+        .select('opinion_id, vote')
+        .eq('voter_id', user.id)
+        .in('opinion_id', ids);
+      if (voteRows) {
+        myVotes = Object.fromEntries(
+          voteRows.map((v) => [v.opinion_id, v.vote as VoteValue]),
+        );
+      }
+    }
+  }
+
+  const phase = topic
+    ? getCyclePhase(topic as ActiveTopic)
+    : null;
+  const canVote = !!user && phase?.phase === 'active';
+  const cantVoteReason = !user
+    ? '로그인하면 투표할 수 있어요'
+    : phase?.phase === 'pre'
+      ? '사이클 시작 후 투표할 수 있어요'
+      : phase?.phase === 'ended'
+        ? '사이클이 종료되어 투표할 수 없어요'
+        : undefined;
+
   return (
     <main className="bg-bg-alt min-h-screen">
       <header className="border-line-subtle border-b">
@@ -81,6 +146,12 @@ export default async function HomePage() {
               topic={topic as ActiveTopic}
               user={user}
               myOpinion={myOpinion}
+            />
+            <OpinionsList
+              opinions={othersOpinions}
+              myVotes={myVotes}
+              canVote={canVote}
+              cantVoteReason={cantVoteReason}
             />
           </div>
         ) : (
